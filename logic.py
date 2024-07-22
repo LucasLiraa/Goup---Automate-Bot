@@ -12,7 +12,7 @@ def verificSerial(mensagem):
     else:
         return None
 
-# Consulta a planilha local em busca do número de série
+# Consulta a planilha na rede em busca do número de série
 def consultDados(Serial):
     try:
         df = pd.read_excel(r"\\10.111.200.59\Controle\Estoque\Relatório Personalizado 14-05-2024.xlsx")
@@ -53,7 +53,6 @@ def adicDados(NomeDispositivo, ModeloDispositivo, SerialDispositivo, Processador
     except Exception as e:
         return f"Erro ao adicionar nova linha à planilha de estoque: {e}"
 
-
 # Exclui uma linha da planilha de estoque com base no tipo de dispositivo e ID
 def exclDados(mensagem):
     try:
@@ -76,9 +75,9 @@ def exclDados(mensagem):
                     df = pd.read_excel(r"\\10.111.200.59\Controle\Estoque\Estoque atual.xlsx")
 
                     # Verifica se o ID está na planilha para o tipo de dispositivo especificado
-                    if id_dispositivo in df[df['TipoDispositivo'] == tipo]['ID'].values:
+                    if id_dispositivo in df[df['TipoDispositivo'] == tipo]['SerialDispositivo'].values:
                         # Remove a linha correspondente ao ID
-                        df = df[(df['TipoDispositivo'] != tipo) | (df['ID'] != id_dispositivo)]
+                        df = df[(df['TipoDispositivo'] != tipo) | (df['SerialDispositivo'] != id_dispositivo)]
                         # Salva as alterações na planilha
                         df.to_excel(r"\\10.111.200.59\Controle\Estoque\Estoque atual.xlsx", index=False)
 
