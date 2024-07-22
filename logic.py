@@ -15,7 +15,7 @@ def verificSerial(mensagem):
 # Consulta a planilha local em busca do número de série
 def consultDados(Serial):
     try:
-        df = pd.read_excel(r"\\10.111.200.59\\Controle\\Estoque\\Relatório Personalizado 14-05-2024.xlsx")
+        df = pd.read_excel(r"\\10.111.200.59\Controle\Estoque\Relatório Personalizado 14-05-2024.xlsx")
         if Serial:
             resultado = df[df['NÚMERO DO SERIAL'] == Serial]
             if not resultado.empty:
@@ -46,9 +46,9 @@ def adicDados(NomeDispositivo, ModeloDispositivo, SerialDispositivo, Processador
             'TipoDispositivo': [TipoDispositivo]  # Nova coluna para armazenar o tipo do dispositivo
         })
         
-        df = pd.read_excel(r"\\10.111.200.59\\Controle\\Estoque\\Estoque atual.xlsx")
+        df = pd.read_excel(r"\\10.111.200.59\Controle\Estoque\Estoque atual.xlsx")
         df = pd.concat([df, nova_linha], ignore_index=True)
-        df.to_excel(r"\\10.111.200.59\\Controle\\Estoque\\Estoque atual.xlsx", index=False)
+        df.to_excel(r"\\10.111.200.59\Controle\Estoque\Estoque atual.xlsx", index=False)
         return "Boa bixo! Equipamento adicionado no estoque."
     except Exception as e:
         return f"Erro ao adicionar nova linha à planilha de estoque: {e}"
@@ -73,14 +73,14 @@ def exclDados(mensagem):
                 id_dispositivo = st.text_input(f"Insira o ID do {tipo} a ser excluído:", key=f"ID_{tipo}")
                 if id_dispositivo:
                     # Carrega a planilha de estoque
-                    df = pd.read_excel(r"\\10.111.200.59\\Controle\\Estoque\\Estoque atual.xlsxEstoque atual.xlsx")
+                    df = pd.read_excel(r"\\10.111.200.59\Controle\Estoque\Estoque atual.xlsx")
 
                     # Verifica se o ID está na planilha para o tipo de dispositivo especificado
                     if id_dispositivo in df[df['TipoDispositivo'] == tipo]['ID'].values:
                         # Remove a linha correspondente ao ID
                         df = df[(df['TipoDispositivo'] != tipo) | (df['ID'] != id_dispositivo)]
                         # Salva as alterações na planilha
-                        df.to_excel(r"\\10.111.200.59\\Controle\\Estoque\\Estoque atual.xlsx", index=False)
+                        df.to_excel(r"\\10.111.200.59\Controle\Estoque\Estoque atual.xlsx", index=False)
 
                         return f"Boa! {tipo} com ID {id_dispositivo} removido do estoque."
                     else:
@@ -93,7 +93,7 @@ def exclDados(mensagem):
 # Verifica o número de itens para um modelo específico
 def verificarNumeroItensModelo(ModeloDispositivo):
     try:
-        df = pd.read_excel(r"\\10.111.200.59\\Controle\\Estoque\\Estoque atual.xlsx")
+        df = pd.read_excel(r"\\10.111.200.59\Controle\Estoque\Estoque atual.xlsx")
         if ModeloDispositivo:
             num_itens = df[df['ModeloDispositivo'] == ModeloDispositivo].shape[0]
             return num_itens
