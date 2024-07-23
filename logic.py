@@ -3,22 +3,19 @@ import asyncio
 import streamlit as st
 import pandas as pd
 
-# Caminho da planilha na rede
-caminho_rede = r"\\10.111.200.59\Controle\Estoque"
-
-# Verifica se a mensagem contém um padrão de número de série
+# Verifica se a mensagem contém um serial válido
 def verificSerial(mensagem):
-    padrao = r'\b[A-Za-z0-9]+\b'
+    padrao = r'\b[A-Z0-9]{6,}\b'  # Ajuste o padrão conforme necessário
     match = re.search(padrao, mensagem)
     if match:
         return match.group()
     else:
         return None
 
-# Consulta a planilha na rede em busca do número de série
+# Consulta a planilha local em busca do número de série
 def consultDados(Serial):
     try:
-        df = pd.read_excel(f"{caminho_rede}\\Relatório Personalizado 14-05-2024.xlsx")
+        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Relatório Personalizado 14-05-2024.xlsx")
         if Serial:
             resultado = df[df['NÚMERO DO SERIAL'] == Serial]
             if not resultado.empty:
@@ -49,44 +46,59 @@ def adicDados(NomeDispositivo, ModeloDispositivo, SerialDispositivo, Processador
             'TipoDispositivo': [TipoDispositivo]  # Nova coluna para armazenar o tipo do dispositivo
         })
         
-        df = pd.read_excel(f"{caminho_rede}\\Estoque atual.xlsx")
+        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
         df = pd.concat([df, nova_linha], ignore_index=True)
-        df.to_excel(f"{caminho_rede}\\Estoque atual.xlsx", index=False)
+        df.to_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx", index=False)
         return "Boa bixo! Equipamento adicionado no estoque."
     except Exception as e:
         return f"Erro ao adicionar nova linha à planilha de estoque: {e}"
 
-# Exclui uma linha da planilha de estoque com base no tipo de dispositivo e ID
-def exclDados(mensagem):
+# Exclui uma linha da planilha de estoque com base no tipo de dispositivo e ID ou Serial
+def exclDados(mensagem, serial_dispositivo):
     try:
         # Padroes para diferentes formas de expressar "Excluir" e "Tipo de dispositivo"
         padroes = {
-            "Teclado": r'(?:Remover|Apagar|Eliminar)\s+Teclado',
-            "Mouse": r'(?:Remover|Apagar|Eliminar)\s+Mouse',
-            "Adaptador": r'(?:Remover|Apagar|Eliminar)\s+Adaptador',
-            "Displayport": r'(?:Remover|Apagar|Eliminar)\s+Displayport',
-            "Kit": r'(?:Remover|Apagar|Eliminar)\s+Kit'
+            "Teclado": r'(Remover|Retirar|Apagar|Eliminar|Excluir)\s+Teclado',
+            "Mouse": r'(Remover|Retirar|Apagar|Eliminar|Excluir)\s+Mouse',
+            "Adaptador": r'(Remover|Retirar|Apagar|Eliminar|Excluir)\s+Adaptador',
+            "Displayport": r'(Remover|Retirar|Apagar|Eliminar|Excluir)\s+Displayport',
+            "Monitor": r'(Remover|Retirar|Apagar|Eliminar|Excluir)\s+Monitor'
         }
 
-        for tipo, padrao in padroes.items():
-            match = re.search(padrao, mensagem, re.IGNORECASE)
-            if match:
-                # Abrir campo para inserir o ID
-                id_dispositivo = st.text_input(f"Insira o ID do {tipo} a ser excluído:", key=f"ID_{tipo}")
-                if id_dispositivo:
-                    # Carrega a planilha de estoque
-                    df = pd.read_excel(f"{caminho_rede}\\Estoque atual.xlsx")
+        if serial_dispositivo:
+            # Carrega a planilha de estoque
+            df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
 
-                    # Verifica se o ID está na planilha para o tipo de dispositivo especificado
-                    if id_dispositivo in df[df['TipoDispositivo'] == tipo]['SerialDispositivo'].values:
-                        # Remove a linha correspondente ao ID
-                        df = df[(df['TipoDispositivo'] != tipo) | (df['SerialDispositivo'] != id_dispositivo)]
-                        # Salva as alterações na planilha
-                        df.to_excel(f"{caminho_rede}\\Estoque atual.xlsx", index=False)
+            # Verifica se o serial está na planilha
+            if serial_dispositivo in df['SerialDispositivo'].values:
+                # Remove a linha correspondente ao serial
+                df = df[df['SerialDispositivo'] != serial_dispositivo]
+                # Salva as alterações na planilha
+                df.to_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx", index=False)
 
-                        return f"Boa! {tipo} com ID {id_dispositivo} removido do estoque."
-                    else:
-                        return f"Poxa, o ID {id_dispositivo} do {tipo} não foi encontrado no estoque."
+                return f"Boa! Dispositivo com serial {serial_dispositivo} removido do estoque."
+            else:
+                return f"Poxa, o serial {serial_dispositivo} não foi encontrado no estoque."
+        else:
+            for tipo, padrao in padroes.items():
+                match = re.search(padrao, mensagem, re.IGNORECASE)
+                if match:
+                    # Abrir campo para inserir o ID
+                    id_dispositivo = st.text_input(f"Insira o ID do {tipo} a ser excluído:", key=f"ID_{tipo}")
+
+                    if id_dispositivo:
+                        # Carrega a planilha de estoque
+                        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
+                        # Verifica se o ID está na planilha
+                        if id_dispositivo in df['SerialDispositivo'].values:
+                            # Remove a linha correspondente ao ID
+                            df = df[df['SerialDispositivo'] != id_dispositivo]
+                            # Salva as alterações na planilha
+                            df.to_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx", index=False)
+
+                            return f"Boa! {tipo} com ID {id_dispositivo} removido do estoque."
+                        else:
+                            return f"Poxa, o ID {id_dispositivo} do {tipo} não foi encontrado no estoque."
 
         return "Palavra-chave para exclusão não encontrada na mensagem."
     except Exception as e:
@@ -95,7 +107,7 @@ def exclDados(mensagem):
 # Verifica o número de itens para um modelo específico
 def verificarNumeroItensModelo(ModeloDispositivo):
     try:
-        df = pd.read_excel(f"{caminho_rede}\\Estoque atual.xlsx")
+        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
         if ModeloDispositivo:
             num_itens = df[df['ModeloDispositivo'] == ModeloDispositivo].shape[0]
             return num_itens
@@ -109,69 +121,38 @@ async def main():
     mensagem = st.text_input("Adicione aqui o equipamento", key="text_input")
     if mensagem:
         tipos_dispositivos = ["Notebook", "Desktop", "Monitor", "Adaptador", "Displayport", "Teclado", "Mouse"]
-        
-        if "Monitor" in mensagem:
-            Marca = st.text_input("Marca:", key="Marca")
-            ModeloDispositivo = st.text_input("Modelo do Monitor:", key="ModeloDispositivo")
-            Serial = st.text_input("Serial:", key="Serial")
-            ObservacaoDispositivo = st.text_input("Observação do Dispositivo:", key="ObservacaoDispositivo")
-            TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)  # Campo de seleção para o tipo do dispositivo
-            if st.button("Adicionar ao estoque"):
-                resultado_adicao = adicDados("Monitor", ModeloDispositivo, Serial, None, None, None, ObservacaoDispositivo, TipoDispositivo)
-                st.write(resultado_adicao)
-        elif "Teclado" in mensagem:
-            Marca = st.text_input("Marca:", key="Marca")
-            ID = st.text_input("ID:", key="ID")
-            ObservacaoDispositivo = st.text_input("Observação do Dispositivo:", key="ObservacaoDispositivo")
-            TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)  # Campo de seleção para o tipo do dispositivo
-            if st.button("Adicionar ao estoque"):
-                resultado_adicao = adicDados("Teclado", Marca, ID, None, None, None, ObservacaoDispositivo, TipoDispositivo)
-                st.write(resultado_adicao)
-        elif "Mouse" in mensagem:
-            Marca = st.text_input("Marca:", key="Marca")
-            ID = st.text_input("ID:", key="ID")
-            ObservacaoDispositivo = st.text_input("Observação do Dispositivo:", key="ObservacaoDispositivo")
-            TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)  # Campo de seleção para o tipo do dispositivo
-            if st.button("Adicionar ao estoque"):
-                resultado_adicao = adicDados("Mouse", Marca, ID, None, None, None, ObservacaoDispositivo, TipoDispositivo)
-                st.write(resultado_adicao)
-        elif "Adaptador" in mensagem:
-            ID = st.text_input("ID:", key="ID")
-            ObservacaoDispositivo = st.text_input("Observação do Dispositivo:", key="ObservacaoDispositivo")
-            TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)  # Campo de seleção para o tipo do dispositivo
-            if st.button("Adicionar ao estoque"):
-                resultado_adicao = adicDados("Adaptador", None, ID, None, None, None, ObservacaoDispositivo, TipoDispositivo)
-                st.write(resultado_adicao)
-        elif "Displayport" in mensagem:
-            ID = st.text_input("ID:", key="ID")
-            ObservacaoDispositivo = st.text_input("Observação do Dispositivo:", key="ObservacaoDispositivo")
-            TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)  # Campo de seleção para o tipo do dispositivo
-            if st.button("Adicionar ao estoque"):
-                resultado_adicao = adicDados("Displayport", None, ID, None, None, None, ObservacaoDispositivo, TipoDispositivo)
-                st.write(resultado_adicao)
+
+        serial = verificSerial(mensagem)
+
+        if re.search(r'(Excluir|Remover|Retirar|Apagar|Eliminar)', mensagem, re.IGNORECASE):
+            resultado_exclusao = exclDados(mensagem, serial)
+            st.write(resultado_exclusao)
+        elif serial:
+            # Consulta a planilha de estoque
+            resultado, NomeDispositivo, ModeloDispositivo, SerialDispositivo, ProcessadorUsado, MemoriaTotal, ArmazenamentoInterno, ObservacaoDispositivo = consultDados(serial)
+            if isinstance(resultado, pd.DataFrame):
+                # Se os resultados forem retornados, mostra na interface
+                st.write(resultado)
+                # Pede para adicionar uma nova observação
+                TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)
+                ObservacaoDispositivo = st.text_input("Observação do Dispositivo:", key="ObservacaoDispositivo")
+                if st.button("Enviar"):
+                    # Adiciona a nova linha à planilha de estoque
+                    resultado_adicao = adicDados(NomeDispositivo, ModeloDispositivo, SerialDispositivo, ProcessadorUsado, MemoriaTotal, ArmazenamentoInterno, ObservacaoDispositivo, TipoDispositivo)
+                    st.write(resultado_adicao)
+            else:
+                st.write(resultado)
         else:
-            Serial = verificSerial(mensagem)
-            if Serial:
-                # Consulta a planilha de estoque
-                resultado, NomeDispositivo, ModeloDispositivo, SerialDispositivo, ProcessadorUsado, MemoriaTotal, ArmazenamentoInterno, ObservacaoDispositivo = consultDados(Serial)
-                if isinstance(resultado, pd.DataFrame):
-                    # Se os resultados forem retornados, mostra na interface
-                    st.write(resultado)
-                    # Pede para adicionar uma nova observação
-                    TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)  # Campo de seleção para o tipo do dispositivo
+            for tipo in tipos_dispositivos:
+                if tipo in mensagem:
+                    Marca = st.text_input("Marca:", key="Marca")
+                    ID = st.text_input("ID:", key="ID")
                     ObservacaoDispositivo = st.text_input("Observação do Dispositivo:", key="ObservacaoDispositivo")
-                    if st.button("Enviar"):
-                        # Adiciona a nova linha à planilha de estoque
-                        resultado_adicao = adicDados(NomeDispositivo, ModeloDispositivo, SerialDispositivo, ProcessadorUsado, MemoriaTotal, ArmazenamentoInterno, ObservacaoDispositivo, TipoDispositivo)
+                    TipoDispositivo = st.selectbox("Tipo do Dispositivo:", tipos_dispositivos)
+                    if st.button("Adicionar ao estoque"):
+                        resultado_adicao = adicDados(tipo, Marca, ID, None, None, None, ObservacaoDispositivo, TipoDispositivo)
                         st.write(resultado_adicao)
-                else:
-                    if "Excluir" not in mensagem:  # Ignora a mensagem se a função de exclusão for acionada
-                        st.write(resultado)
-                
-                # Verifica se a mensagem contém o comando de exclusão
-                if "Excluir" in mensagem:
-                    resultado_exclusao = exclDados(mensagem)
-                    st.write(resultado_exclusao)
+                    break
             else:
                 st.write("Puts, nenhum equipamento foi encontrado com esse serial.")
 
