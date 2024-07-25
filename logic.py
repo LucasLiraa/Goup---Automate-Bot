@@ -3,9 +3,6 @@ import asyncio
 import streamlit as st
 import pandas as pd
 
-# Define o caminho de rede
-CAMINHO_REDE = "\\\\10.111.200.59\\Controle\\Estoque"
-
 # Verifica se a mensagem contém um serial válido
 def verificSerial(mensagem):
     padrao = r'\b[A-Z0-9]{6,}\b'  # Ajuste o padrão conforme necessário
@@ -18,7 +15,7 @@ def verificSerial(mensagem):
 # Consulta a planilha local em busca do número de série
 def consultDados(Serial):
     try:
-        df = pd.read_excel(f"{CAMINHO_REDE}\\Relatório Personalizado 14-05-2024.xlsx")
+        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Relatório Personalizado 14-05-2024.xlsx")
         if Serial:
             resultado = df[df['NÚMERO DO SERIAL'] == Serial]
             if not resultado.empty:
@@ -49,9 +46,9 @@ def adicDados(NomeDispositivo, ModeloDispositivo, SerialDispositivo, Processador
             'TipoDispositivo': [TipoDispositivo]  # Nova coluna para armazenar o tipo do dispositivo
         })
         
-        df = pd.read_excel(f"{CAMINHO_REDE}\\Estoque atual.xlsx")
+        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
         df = pd.concat([df, nova_linha], ignore_index=True)
-        df.to_excel(f"{CAMINHO_REDE}\\Estoque atual.xlsx", index=False)
+        df.to_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx", index=False)
         return "Boa bixo! Equipamento adicionado no estoque."
     except Exception as e:
         return f"Erro ao adicionar nova linha à planilha de estoque: {e}"
@@ -70,14 +67,14 @@ def exclDados(mensagem, serial_dispositivo):
 
         if serial_dispositivo:
             # Carrega a planilha de estoque
-            df = pd.read_excel(f"{CAMINHO_REDE}\\Estoque atual.xlsx")
+            df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
 
             # Verifica se o serial está na planilha
             if serial_dispositivo in df['SerialDispositivo'].values:
                 # Remove a linha correspondente ao serial
                 df = df[df['SerialDispositivo'] != serial_dispositivo]
                 # Salva as alterações na planilha
-                df.to_excel(f"{CAMINHO_REDE}\\Estoque atual.xlsx", index=False)
+                df.to_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx", index=False)
 
                 return f"Boa! Dispositivo com serial {serial_dispositivo} removido do estoque."
             else:
@@ -91,13 +88,13 @@ def exclDados(mensagem, serial_dispositivo):
 
                     if id_dispositivo:
                         # Carrega a planilha de estoque
-                        df = pd.read_excel(f"{CAMINHO_REDE}\\Estoque atual.xlsx")
+                        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
                         # Verifica se o ID está na planilha
                         if id_dispositivo in df['SerialDispositivo'].values:
                             # Remove a linha correspondente ao ID
                             df = df[df['SerialDispositivo'] != id_dispositivo]
                             # Salva as alterações na planilha
-                            df.to_excel(f"{CAMINHO_REDE}\\Estoque atual.xlsx", index=False)
+                            df.to_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx", index=False)
 
                             return f"Boa! {tipo} com ID {id_dispositivo} removido do estoque."
                         else:
@@ -110,7 +107,7 @@ def exclDados(mensagem, serial_dispositivo):
 # Verifica o número de itens para um modelo específico
 def verificarNumeroItensModelo(ModeloDispositivo):
     try:
-        df = pd.read_excel(f"{CAMINHO_REDE}\\Estoque atual.xlsx")
+        df = pd.read_excel("C:\\Users\\lukin\\Downloads\\Scripts\\Goup-AutomateBot\\base\\Estoque atual.xlsx")
         if ModeloDispositivo:
             num_itens = df[df['ModeloDispositivo'] == ModeloDispositivo].shape[0]
             return num_itens
